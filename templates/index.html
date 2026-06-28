@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ASCII Art Web</title>
+</head>
+
+<body>
+    <form method="POST" action="/ascii-art">
+        <textarea name="text">{{.Text}}</textarea>
+        <select name="banner">
+            <option value="standard">Standard</option>
+            <option value="shadow">Shadow</option>
+            <option value="thinkertoy">Thinkertoy</option>
+        </select>
+        <button type="submit">Generate</button>
+    </form>
+
+    {{if .Error}}
+    <p>Error: {{.Error}}</p>
+    {{end}}
+
+    {{if .Result}}
+    <pre>{{.Result}}</pre>
+    {{end}}
+</body>
+
+</html>
