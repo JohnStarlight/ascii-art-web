@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -16,7 +15,7 @@ func main() {
 	// Route "/ascii-art" χειρίζεται την υποβολή της φόρμας (POST)
 	http.HandleFunc("/ascii-art", handlers.AsciiArt)
 
-	fmt.Println("Server running at http://localhost:8080")
+	log.Println("Server running at http://localhost:8080")
 
 	// ListenAndServe μπλοκάρει — αν αποτύχει (π.χ. port κατειλημμένο), log.Fatal σταματά το πρόγραμμα
 	log.Fatal(http.ListenAndServe(":8080", nil))

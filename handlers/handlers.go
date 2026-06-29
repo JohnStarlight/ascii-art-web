@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"html/template"
 	"net/http"
 
@@ -10,10 +11,12 @@ import (
 // PageData είναι το struct που περνάμε στο HTML template
 // Χρησιμοποιείται για να εμφανιστούν τα δεδομένα του χρήστη, το αποτέλεσμα και τα errors
 type PageData struct {
-	Text   string // κείμενο που έγραψε ο χρήστης
-	Banner string // banner style που διάλεξε (standard/shadow/thinkertoy)
-	Result string // ASCII art αποτέλεσμα
-	Error  string // μήνυμα λάθους αν κάτι πάει στραβά
+	Text    string        // κείμενο που έγραψε ο χρήστης
+	Banner  string        // banner style που διάλεξε (standard/shadow/thinkertoy)
+	Color   string        // χρώμα για το ASCII art (π.χ. red, #ff0000, rgb(255,0,0))
+	Letters string        // substring που θα χρωματιστεί — αν κενό, χρωματίζεται όλο
+	Result  template.HTML // ASCII art αποτέλεσμα — HTML ώστε να μην escape-αρουν τα <span> tags
+	Error   string        // μήνυμα λάθους αν κάτι πάει στραβά
 }
 
 // Home χειρίζεται το GET "/" — επιστρέφει την αρχική σελίδα με τη φόρμα
@@ -52,12 +55,16 @@ func AsciiArt(w http.ResponseWriter, r *http.Request) {
 	// Διαβάζουμε τα δεδομένα από τη φόρμα
 	text := r.FormValue("text")
 	banner := r.FormValue("banner")
+	color := r.FormValue("color")
+	letters := r.FormValue("letters")
 
 	// Αρχικοποιούμε το PageData με τα δεδομένα του χρήστη
 	// ώστε να παραμένουν στη φόρμα μετά το submit
 	data := PageData{
-		Text:   text,
-		Banner: banner,
+		Text:    text,
+		Banner:  banner,
+		Color:   color,
+		Letters: letters,
 	}
 
 	// Validation: κενό κείμενο → 400
@@ -76,14 +83,16 @@ func AsciiArt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Κλήση της ascii.Generate() από το package του Ατόμου 2
-	result, err := ascii.Generate(text, banner)
+	result, err := ascii.Generate(text, banner, color, letters)
 	if err != nil {
 		data.Error = err.Error()
 		renderTemplate(w, data, http.StatusBadRequest)
 		return
 	}
 
-	data.Result = result
+	// template.HTML λέει στο Go template "μην κάνεις escape αυτό το string"
+	// χρειάζεται γιατί το αποτέλεσμα περιέχει <span> tags για τα χρώματα
+	data.Result = template.HTML(result)
 	renderTemplate(w, data, http.StatusOK)
 }
 
@@ -95,7 +104,14 @@ func renderTemplate(w http.ResponseWriter, data PageData, status int) {
 		return
 	}
 
-	// WriteHeader πρέπει να κληθεί ΠΡΙΝ το Execute, αλλιώς αγνοείται
+	// Γράφουμε πρώτα σε buffer — αν αποτύχει το Execute αφού έχουμε ήδη
+	// γράψει στο w, δεν μπορούμε να αλλάξουμε τον status code
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		http.Error(w, "500 - Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(status)
-	tmpl.Execute(w, data)
+	buf.WriteTo(w)
 }

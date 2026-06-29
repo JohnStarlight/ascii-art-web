@@ -14,7 +14,7 @@
 ### Τι δουλεύει ήδη
 
 - GET `/` → επιστρέφει τη φόρμα με `200 OK`
-- POST `/ascii-art` → παίρνει `text` + `banner`, καλεί `ascii.Generate()`, εμφανίζει αποτέλεσμα
+- POST `/ascii-art` → παίρνει `text` + `banner` + `color` + `letters`, καλεί `ascii.Generate()`, εμφανίζει αποτέλεσμα
 - Κενό input → `400 Bad Request`
 - Άγνωστο path → `404 Not Found`
 - Server error → `500 Internal Server Error`
@@ -34,7 +34,7 @@
 ```go
 package ascii
 
-func Generate(text, banner string) (string, error) {
+func Generate(text, banner, color, letters string) (string, error) {
     return "ASCII art coming soon...", nil
 }
 ```
@@ -42,17 +42,21 @@ func Generate(text, banner string) (string, error) {
 Η συνάρτηση **πρέπει να έχει ακριβώς αυτή την υπογραφή:**
 
 ```go
-func Generate(text, banner string) (string, error)
+func Generate(text, banner, color, letters string) (string, error)
 ```
 
 ### Κανόνες που ΠΡΕΠΕΙ να ακολουθήσεις
 
 - Το package πρέπει να ονομάζεται `ascii`
 - Η συνάρτηση πρέπει να ονομάζεται `Generate` (κεφαλαίο G)
-- Παράμετροι: `text string`, `banner string` — με αυτή τη σειρά
+- Παράμετροι: `text string`, `banner string`, `color string`, `letters string` — με αυτή τη σειρά
 - Επιστροφή: `(string, error)` — με αυτή τη σειρά
 - Σε μη έγκυρο χαρακτήρα → επέστρεψε `error` (όχι panic)
 - Σε μη έγκυρο banner → επέστρεψε `error`
+- Αν `color` είναι κενό → παράγε ASCII art χωρίς χρωματισμό
+- Αν `color` έχει τιμή αλλά `letters` είναι κενό → χρωμάτισε όλο το output
+- Αν και τα δύο έχουν τιμή → χρωμάτισε μόνο τις εμφανίσεις του `letters` substring
+- Το output πρέπει να περιέχει `<span style="color: X">` tags — όχι ANSI codes
 
 ---
 
@@ -72,10 +76,12 @@ func Generate(text, banner string) (string, error)
 
 ```go
 type PageData struct {
-    Text   string   // το κείμενο που έγραψε ο χρήστης
-    Banner string   // το banner style που διάλεξε
-    Result string   // το ASCII art αποτέλεσμα
-    Error  string   // μήνυμα λάθους (αν υπάρχει)
+    Text    string        // το κείμενο που έγραψε ο χρήστης
+    Banner  string        // το banner style που διάλεξε
+    Color   string        // χρώμα (π.χ. red, #ff0000, rgb(255,0,0))
+    Letters string        // substring που θα χρωματιστεί — αν κενό, χρωματίζεται όλο
+    Result  template.HTML // το ASCII art αποτέλεσμα — περιέχει <span> tags, ΜΗΝ το escape-άρεις
+    Error   string        // μήνυμα λάθους (αν υπάρχει)
 }
 ```
 
@@ -85,15 +91,23 @@ type PageData struct {
 |-------|-------------------|
 | `{{.Text}}` | value του textarea (για να παραμένει μετά το submit) |
 | `{{.Banner}}` | για να παραμένει επιλεγμένο το σωστό option |
-| `{{.Result}}` | μέσα σε `<pre>` tag |
+| `{{.Color}}` | value του color input |
+| `{{.Letters}}` | value του letters input |
+| `{{.Result}}` | μέσα σε `<pre>` tag — **χρησιμοποίησε `{{.Result}}` όχι `{{html .Result}}`** |
 | `{{.Error}}` | εμφάνιση μηνύματος λάθους |
 
 **Απαραίτητα στοιχεία της φόρμας:**
 - `<form method="POST" action="/ascii-art">` — ακριβώς έτσι
 - `<textarea name="text">` — το name πρέπει να είναι `text`
-- `<select name="banner">` — το name πρέπει να είναι `banner`
-- Options: `standard`, `shadow`, `thinkertoy` (lowercase, ακριβώς έτσι)
+- `<select name="banner">` — options: `standard`, `shadow`, `thinkertoy` (lowercase, ακριβώς έτσι)
+- `<select name="color">` — dropdown με συγκεκριμένες τιμές (δες παρακάτω)
+- `<input type="text" name="letters">` — για το substring (προαιρετικό)
 - `<pre>` tag για το αποτέλεσμα — απαραίτητο για το whitespace
+
+**Επιτρεπτές τιμές για το `color` select (ακριβώς αυτά τα values):**
+`black` (default), `red`, `yellow`, `blue`, `green`, `purple`, `orange`, `gray`, `pink`, `lightblue`, `lightgreen`
+
+Το selected option πρέπει να παραμένει μετά το submit — χρησιμοποίησε `{{if eq .Color "value"}}selected{{end}}` σε κάθε option.
 
 **Χωρίς εξωτερικές εξαρτήσεις** — no CDN, no JS frameworks.
 
