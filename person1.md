@@ -57,6 +57,7 @@ func Generate(text, banner, color, letters string) (string, error)
 - Αν `color` έχει τιμή αλλά `letters` είναι κενό → χρωμάτισε όλο το output
 - Αν και τα δύο έχουν τιμή → χρωμάτισε μόνο τις εμφανίσεις του `letters` substring
 - Το output πρέπει να περιέχει `<span style="color: X">` tags — όχι ANSI codes
+- Πρέπει να δημιουργήσεις τον φάκελο `banners/` με τα αρχεία: `standard.txt`, `shadow.txt`, `thinkertoy.txt`
 
 ---
 
@@ -108,6 +109,8 @@ type PageData struct {
 `black` (default), `red`, `yellow`, `blue`, `green`, `purple`, `orange`, `gray`, `pink`, `lightblue`, `lightgreen`
 
 Το selected option πρέπει να παραμένει μετά το submit — χρησιμοποίησε `{{if eq .Color "value"}}selected{{end}}` σε κάθε option.
+
+Ίδια λογική για το banner select — χρησιμοποίησε `{{if eq .Banner "value"}}selected{{end}}` σε κάθε option.
 
 **Χωρίς εξωτερικές εξαρτήσεις** — no CDN, no JS frameworks.
 
@@ -198,7 +201,7 @@ git push origin main
 
 **⚠️ Προσοχή:**
 - Μην αγγίξεις τα `main.go`, `handlers/handlers.go`, `ascii/`
-- Τα `name` attributes της φόρμας πρέπει να είναι ακριβώς: `text`, `banner`
+- Τα `name` attributes της φόρμας πρέπει να είναι ακριβώς: `text`, `banner`, `color`, `letters`
 - Τα Go template tags (`{{.Text}}`, `{{.Result}}` κλπ.) πρέπει να είναι ακριβώς έτσι
 
 ---
