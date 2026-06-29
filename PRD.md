@@ -2,7 +2,7 @@
 
 ## Σκοπός
 
-Δημιουργία web εφαρμογής σε Go που δέχεται κείμενο από τον χρήστη μέσω φόρμας και επιστρέφει το αντίστοιχο ASCII art, χρησιμοποιώντας banner αρχεία (standard, shadow, thinkertoy). Χρησιμοποιείται **μόνο** η standard library της Go.
+Δημιουργία web εφαρμογής σε Go που δέχεται κείμενο από τον χρήστη μέσω φόρμας και επιστρέφει το αντίστοιχο ASCII art, χρησιμοποιώντας banner αρχεία (standard, shadow, thinkertoy). Υποστηρίζει χρωματισμό του output μέσω dropdown επιλογής χρώματος και προαιρετικού substring. Χρησιμοποιείται **μόνο** η standard library της Go.
 
 ---
 
@@ -62,9 +62,9 @@ ascii-art-web/
    - Σε άγνωστο path → `404`
 
 3. **POST `/ascii-art`** — λήψη φόρμας
-   - Parse των form values (`text`, `banner`)
+   - Parse των form values (`text`, `banner`, `color`, `letters`)
    - Validation input (κενό text, μη έγκυρο banner, non-ASCII χαρακτήρες)
-   - Κλήση `ascii.Generate(text, banner)`
+   - Κλήση `ascii.Generate(text, banner, color, letters)`
    - Render αποτελέσματος στο template
    - Σωστά HTTP status codes σε κάθε περίπτωση
 
@@ -101,10 +101,14 @@ ascii-art-web/
    - Υλοποίηση `LoadBanner(filename string) (map[rune][]string, error)`
 
 3. **Γεννήτρια ASCII art**
-   - Υλοποίηση `Generate(text, bannerName string) (string, error)`
+   - Υλοποίηση `Generate(text, banner, color, letters string) (string, error)`
    - Υποστήριξη `\n` (newline) στο input κείμενο
    - Για κάθε γραμμή κειμένου: συνένωση των 8 γραμμών κάθε χαρακτήρα οριζόντια
    - Επιστροφή error για non-printable ή non-ASCII χαρακτήρες
+   - Αν `color` κενό → output χωρίς χρωματισμό
+   - Αν `color` έχει τιμή, `letters` κενό → χρωματίζεται όλο το output
+   - Αν και τα δύο έχουν τιμή → χρωματίζονται μόνο οι εμφανίσεις του `letters` substring
+   - Χρωματισμός μέσω `<span style="color: X">` tags — **όχι** ANSI codes
 
 4. **Unit tests**
    - Test για κάθε banner style
@@ -117,6 +121,8 @@ ascii-art-web/
 - [ ] `Generate` παράγει σωστό ASCII art για απλό κείμενο
 - [ ] `Generate` χειρίζεται `\n` στο input
 - [ ] `Generate` επιστρέφει error για μη έγκυρο input
+- [ ] `Generate` χρωματίζει όλο το output όταν δίνεται μόνο χρώμα
+- [ ] `Generate` χρωματίζει μόνο το substring όταν δίνονται και τα δύο
 - [ ] Τουλάχιστον 5 unit tests που περνάνε
 
 ---
@@ -130,14 +136,16 @@ ascii-art-web/
 1. **HTML φόρμα**
    - `<textarea>` για εισαγωγή κειμένου (name=`text`)
    - `<select>` για επιλογή banner style (name=`banner`) με options: standard, shadow, thinkertoy
+   - `<select>` για επιλογή χρώματος (name=`color`) με options: black, red, yellow, blue, green, purple, orange, gray, pink, lightblue, lightgreen
+   - `<input type="text">` για substring χρωματισμού (name=`letters`) — προαιρετικό
    - `<button type="submit">` για αποστολή
    - Method: `POST`, action: `/ascii-art`
 
 2. **Εμφάνιση αποτελέσματος**
    - Εμφάνιση ASCII art output μέσα σε `<pre>` tag (για διατήρηση whitespace)
-   - Το template δέχεται Go struct με πεδία: `Text`, `Banner`, `Result`, `Error`
+   - Το template δέχεται Go struct με πεδία: `Text`, `Banner`, `Color`, `Letters`, `Result`, `Error`
    - Αν υπάρχει `Error`: εμφάνιση μηνύματος σφάλματος
-   - Αν υπάρχει `Result`: εμφάνιση ASCII art
+   - Αν υπάρχει `Result`: εμφάνιση ASCII art (περιέχει `<span>` tags — ΜΗΝ κάνεις escape)
 
 3. **CSS Styling**
    - Καθαρό, minimal design (inline ή `<style>` tag — χωρίς εξωτερικά CDN)
@@ -148,14 +156,17 @@ ascii-art-web/
 4. **UX βελτιώσεις**
    - Το κείμενο που έγραψε ο χρήστης παραμένει στο textarea μετά το submit
    - Το επιλεγμένο banner style παραμένει επιλεγμένο
+   - Το επιλεγμένο χρώμα παραμένει επιλεγμένο
+   - Το letters input διατηρεί την τιμή του μετά το submit
    - Placeholder text στο textarea
 
 #### Παραδοτέα
 
 - [ ] Φόρμα λειτουργεί (POST στέλνεται σωστά)
 - [ ] ASCII art εμφανίζεται σε `<pre>` με monospace font
+- [ ] Χρωματισμένο ASCII art εμφανίζεται σωστά (τα `<span>` tags δεν escape-άρονται)
 - [ ] Error state εμφανίζεται καθαρά
-- [ ] Επιλογές φόρμας διατηρούνται μετά το submit
+- [ ] Επιλογές φόρμας διατηρούνται μετά το submit (text, banner, color, letters)
 - [ ] Χωρίς εξωτερικές εξαρτήσεις (no CDN, no JS frameworks)
 
 ---
@@ -165,10 +176,12 @@ ascii-art-web/
 ```go
 // handlers/handlers.go
 type PageData struct {
-    Text   string
-    Banner string
-    Result string
-    Error  string
+    Text    string
+    Banner  string
+    Color   string        // χρώμα επιλογής (π.χ. red, blue, lightgreen)
+    Letters string        // substring που θα χρωματιστεί — αν κενό, χρωματίζεται όλο
+    Result  template.HTML // HTML output — περιέχει <span> tags για χρώματα
+    Error   string
 }
 ```
 
@@ -178,9 +191,9 @@ type PageData struct {
 
 | Από | Προς | Interface |
 |-----|------|-----------|
-| Άτομο 1 | Άτομο 2 | `ascii.Generate(text, banner string) (string, error)` |
+| Άτομο 1 | Άτομο 2 | `ascii.Generate(text, banner, color, letters string) (string, error)` |
 | Άτομο 1 | Άτομο 3 | `PageData` struct + `templates/index.html` |
-| Άτομο 2 | Άτομο 1 | Επιστρέφει `(string, error)` — errors: `ErrInvalidChar`, `ErrBannerNotFound` |
+| Άτομο 2 | Άτομο 1 | Επιστρέφει `(string, error)` — output με `<span>` tags για χρώματα |
 
 ---
 
@@ -208,3 +221,4 @@ type PageData struct {
 - [ ] `go vet ./...` — χωρίς warnings
 - [ ] Χωρίς χρήση external packages (`go.mod` έχει μόνο `module` + `go` directive)
 - [ ] Δοκιμή με: απλό κείμενο, κείμενο με `\n`, κενό input, μη-ASCII χαρακτήρες
+- [ ] Δοκιμή χρωματισμού: χρώμα χωρίς letters, χρώμα με letters, χωρίς χρώμα
