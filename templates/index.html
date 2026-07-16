@@ -5,40 +5,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ASCII Art Web</title>
+    <style>
+        pre {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        #container {
+            width: 90%;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+
+        #main-content {
+            display: flex; /* Ενεργοποιούμε το Flexbox */
+            gap: 30px;     /* Απόσταση μεταξύ των δύο στηλών */
+            flex-direction: column /* Αλλάζει την κατευθυνση του flexbox σε κάθετη */
+        }
+
+        #controls {
+            flex: 1;       /* Πιάνει το 1/3 του χώρου */
+            background: #f9f9f9;
+            padding: 15px;
+        }
+
+        #preview {
+            flex: 2;       /* Πιάνει τα 2/3 του χώρου */
+            padding: 15px;
+        }
+    </style>
 </head>
 
 <body>
-    <form method="POST" action="/ascii-art">
-        <textarea name="text">{{.Text}}</textarea>
-        <select name="banner">
-            <option value="standard">Standard</option>
-            <option value="shadow">Shadow</option>
-            <option value="thinkertoy">Thinkertoy</option>
-        </select>
-        <select name="color">
-            <option value="black"       {{if eq .Color "black"}}selected{{end}}>Black (default)</option>
-            <option value="red"         {{if eq .Color "red"}}selected{{end}}>Red</option>
-            <option value="yellow"      {{if eq .Color "yellow"}}selected{{end}}>Yellow</option>
-            <option value="blue"        {{if eq .Color "blue"}}selected{{end}}>Blue</option>
-            <option value="green"       {{if eq .Color "green"}}selected{{end}}>Green</option>
-            <option value="purple"      {{if eq .Color "purple"}}selected{{end}}>Purple</option>
-            <option value="orange"      {{if eq .Color "orange"}}selected{{end}}>Orange</option>
-            <option value="gray"        {{if eq .Color "gray"}}selected{{end}}>Gray</option>
-            <option value="pink"        {{if eq .Color "pink"}}selected{{end}}>Pink</option>
-            <option value="lightblue"   {{if eq .Color "lightblue"}}selected{{end}}>Light Blue</option>
-            <option value="lightgreen"  {{if eq .Color "lightgreen"}}selected{{end}}>Light Green</option>
-        </select>
-        <input type="text" name="letters" value="{{.Letters}}" placeholder="Letters to color (empty = all)">
-        <button type="submit">Generate</button>
-    </form>
+    <div id="container">
+        <div id="header">
+            <h1>ASCII Art Web</h1>
+        </div>
+        <div id="main-content">
+            <div id="controls">
+                <form method="POST" action="/ascii-art">
+                    <textarea name="text">{{.Text}}</textarea>
+                    <select name="banner">
+                    <option value="standard">Standard</option>
+                    <option value="shadow">Shadow</option>
+                    <option value="thinkertoy">Thinkertoy</option>
+                    </select>
+                    <select name="color">
+                    <option value="black"       {{if eq .Color "black"}}selected{{end}}>Black (default)</option>
+                    <option value="red"         {{if eq .Color "red"}}selected{{end}}>Red</option>
+                    <option value="yellow"      {{if eq .Color "yellow"}}selected{{end}}>Yellow</option>
+                    <option value="blue"        {{if eq .Color "blue"}}selected{{end}}>Blue</option>
+                    <option value="green"       {{if eq .Color "green"}}selected{{end}}>Green</option>
+                    <option value="purple"      {{if eq .Color "purple"}}selected{{end}}>Purple</option>
+                    <option value="orange"      {{if eq .Color "orange"}}selected{{end}}>Orange</option>
+                    <option value="gray"        {{if eq .Color "gray"}}selected{{end}}>Gray</option>
+                    <option value="pink"        {{if eq .Color "pink"}}selected{{end}}>Pink</option>
+                    <option value="lightblue"   {{if eq .Color "lightblue"}}selected{{end}}>Light Blue</option>
+                    <option value="lightgreen"  {{if eq .Color "lightgreen"}}selected{{end}}>Light Green</option>
+                    </select>
+                    <input type="text" name="letters" value="{{.Letters}}" placeholder="Letters to color (empty = all)">
+                    <button type="submit">Generate</button>
+                </form>
+            </div>
+            <div id="preview">
+                 {{if .Error}}
+                <p>Error: {{.Error}}</p>
+                {{end}}
 
-    {{if .Error}}
-    <p>Error: {{.Error}}</p>
-    {{end}}
-
-    {{if .Result}}
-    <pre>{{.Result}}</pre>
-    {{end}}
+                {{if .Result}}
+                <pre>{{.Result}}</pre>
+                {{end}}
+            </div>
+        </div>   
+    </div>
 </body>
 
 </html>
