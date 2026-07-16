@@ -45,13 +45,13 @@
         <div id="main-content">
             <div id="controls">
                 <form method="POST" action="/ascii-art">
-                    <textarea name="text">{{.Text}}</textarea>
+                    <textarea id="text" name="text">{{.Text}}</textarea>
                     <select name="banner">
                     <option value="standard">Standard</option>
                     <option value="shadow">Shadow</option>
                     <option value="thinkertoy">Thinkertoy</option>
                     </select>
-                    <select name="color">
+                    <select id="color" name="color">
                     <option value="black"       {{if eq .Color "black"}}selected{{end}}>Black (default)</option>
                     <option value="red"         {{if eq .Color "red"}}selected{{end}}>Red</option>
                     <option value="yellow"      {{if eq .Color "yellow"}}selected{{end}}>Yellow</option>
@@ -68,7 +68,7 @@
                     <button type="submit">Generate</button>
                 </form>
             </div>
-            <div id="preview">
+            <div id="preview" style="background-color: lightgray">
                  {{if .Error}}
                 <p>Error: {{.Error}}</p>
                 {{end}}
@@ -81,4 +81,20 @@
     </div>
 </body>
 
+<script>
+    let easterEgg = false;
+    document.getElementById("text").oninput = function () {
+        if (this.value === "Balevizos" || this.value === "balevizos" || this.value === "basilis" || this.value === "Basilis") {
+            document.getElementById("preview").style.backgroundColor = "pink";
+            easterEgg = true;
+        }
+        else {
+            if (easterEgg) {
+                document.getElementById("preview").style.backgroundColor = "lightgray";
+                document.getElementById("preview").style.color = "{{.Color}}";
+                easterEgg = false;
+            }
+        }
+    }
+</script>
 </html>

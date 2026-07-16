@@ -23,13 +23,13 @@ type PageData struct {
 func Home(w http.ResponseWriter, r *http.Request) {
 	// Το HandleFunc("/") πιάνει ΟΛΑ τα άγνωστα paths, οπότε ελέγχουμε εδώ για 404
 	if r.URL.Path != "/" {
-		http.Error(w, "404 - Page Not Found", http.StatusNotFound)
+		statusTemplate(w, http.StatusNotFound)
 		return
 	}
 
 	// Η αρχική σελίδα δέχεται μόνο GET
 	if r.Method != http.MethodGet {
-		http.Error(w, "405 - Method Not Allowed", http.StatusMethodNotAllowed)
+		statusTemplate(w, http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -48,7 +48,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 func AsciiArt(w http.ResponseWriter, r *http.Request) {
 	// Αυτό το route δέχεται μόνο POST
 	if r.Method != http.MethodPost {
-		http.Error(w, "405 - Method Not Allowed", http.StatusMethodNotAllowed)
+		statusTemplate(w, http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -114,4 +114,29 @@ func renderTemplate(w http.ResponseWriter, data PageData, status int) {
 
 	w.WriteHeader(status)
 	buf.WriteTo(w)
+}
+
+// statusTemplate φορτώνει και εκτελεί τα αντίστοιχα HTML template ανα status code (400, 404, 405, 500)
+func statusTemplate(w http.ResponseWriter, status int) {
+	var tmpl *template.Template
+	var err error
+	switch status {
+	case http.StatusBadRequest:
+		tmpl, err = template.ParseFiles("templates/400.html")
+	case http.StatusNotFound:
+		tmpl, err = template.ParseFiles("templates/404.html")
+	case http.StatusMethodNotAllowed:
+		tmpl, err = template.ParseFiles("templates/405.html")
+	case http.StatusInternalServerError:
+		tmpl, err = template.ParseFiles("templates/500.html")
+	default:
+		http.Error(w, "500 - Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if err != nil {
+		http.Error(w, "500 - Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(status)
+	tmpl.Execute(w, nil)
 }
