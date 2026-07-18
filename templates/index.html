@@ -34,6 +34,17 @@
             flex: 2;       /* Πιάνει τα 2/3 του χώρου */
             padding: 15px;
         }
+
+        #text {
+            width: 50%;
+            height: 20px;
+            resize: none;
+        }
+        form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
     </style>
 </head>
 
@@ -47,9 +58,9 @@
                 <form method="POST" action="/ascii-art">
                     <textarea id="text" name="text">{{.Text}}</textarea>
                     <select name="banner">
-                    <option value="standard">Standard</option>
-                    <option value="shadow">Shadow</option>
-                    <option value="thinkertoy">Thinkertoy</option>
+                    <option value="standard" {{if eq .Banner "standard"}}selected{{end}}>Standard (default)</option>
+                    <option value="shadow" {{if eq .Banner "shadow"}}selected{{end}}>Shadow</option>
+                    <option value="thinkertoy" {{if eq .Banner "thinkertoy"}}selected{{end}}>Thinkertoy</option>
                     </select>
                     <select id="color" name="color">
                     <option value="black"       {{if eq .Color "black"}}selected{{end}}>Black (default)</option>
